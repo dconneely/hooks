@@ -1,0 +1,19 @@
+# The hooks this repository provides, read by prek and pre-commit. Each runs
+# a POSIX sh script from this repository's checkout (`language: script`),
+# with the consumer's root as the working directory.
+
+- id: check-pii
+  name: check-pii (personal details)
+  description: fails if the staged diff adds personal details, derived from
+    Git config and the OS at commit time, or listed in a machine-local file.
+  language: script
+  entry: hooks/check-pii.sh
+  pass_filenames: false
+  stages: [pre-commit]
+
+- id: check-pii-msg
+  name: check-pii (commit message)
+  description: the same checks, on the commit message.
+  language: script
+  entry: hooks/check-pii.sh --commit-msg
+  stages: [commit-msg]

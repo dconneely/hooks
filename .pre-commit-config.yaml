@@ -1,0 +1,85 @@
+# This repository's own hooks, run by prek. check-pii runs from the working
+# tree as local hooks, so a change is checked by the version it makes.
+
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+
+repos:
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      # Checks only: .gitattributes decides each file's line endings
+      - id: mixed-line-ending
+        args: [--fix=no]
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+      # A missing executable bit only shows on macOS and Linux, and
+      # `language: script` needs it
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: ShellCheck (POSIX sh)
+        language: system
+        entry: shellcheck -x -s sh --severity=warning
+        files: ^(hooks|tests)/[^/]+\.sh$
+
+      - id: tests
+        name: check-pii tests
+        language: system
+        entry: sh tests/check-pii.sh
+        pass_filenames: false
+        files: ^(hooks/check-pii\.sh|tests/[^/]+\.sh)$
+
+      - id: prettier-markdown
+        name: Prettier (formats Markdown)
+        description: rewraps prose to .prettierrc.json's width, which must
+          match .markdownlint-cli2.jsonc's line length.
+        language: system
+        entry: npx --yes prettier@3.9.6 --write
+        types: [markdown]
+        # Concurrent npx calls on a cold cache race to install the package
+        require_serial: true
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: b82a6c8896e491b9cb377a99ff3412131920681b # frozen: v0.23.2
+    hooks:
+      - id: markdownlint-cli2
+        name: markdownlint (Markdown)
+
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: Gitleaks (secret scanning)
+        language: system
+        entry: gitleaks git --pre-commit --staged --redact -v
+        pass_filenames: false
+
+      - id: check-pii
+        name: check-pii (personal details)
+        language: system
+        entry: sh hooks/check-pii.sh
+        pass_filenames: false
+
+      - id: check-pii-msg
+        name: check-pii (commit message)
+        language: system
+        entry: sh hooks/check-pii.sh --commit-msg
+        stages: [commit-msg]
+
+      - id: conventional-commit
+        name: Conventional Commits (commit message)
+        description: >-
+          the first line is `type: summary` or `type(scope): summary`, or
+          Git's own Merge, Revert, fixup! or squash!.
+        language: pygrep
+        entry: '\A((build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: \S|Merge |Revert "|fixup! |squash! )'
+        args: [--negate, --multiline]
+        stages: [commit-msg]

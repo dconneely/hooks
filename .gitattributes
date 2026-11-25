@@ -1,0 +1,7 @@
+# LF everywhere, whatever core.autocrlf says: prek runs the hooks from its
+# own clone of this repository, and a CR breaks a shell script's shebang
+# and every line it reads.
+* text=auto eol=lf
+
+# Show the enclosing heading in diff hunk headers
+*.md diff=markdown
