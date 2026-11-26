@@ -38,6 +38,14 @@ repos:
         pass_filenames: false
         files: ^(hooks/check-pii\.sh|tests/[^/]+\.sh)$
 
+      - id: actionlint
+        name: actionlint (GitHub Actions workflows)
+        description: checks the workflows, including ShellCheck on each
+          `run:` step.
+        language: system
+        entry: actionlint
+        files: ^\.github/workflows/[^/]+\.ya?ml$
+
       - id: prettier-markdown
         name: Prettier (formats Markdown)
         description: rewraps prose to .prettierrc.json's width, which must
@@ -66,6 +74,8 @@ repos:
         name: check-pii (personal details)
         language: system
         entry: sh hooks/check-pii.sh
+        # LICENCE's copyright line names its holder
+        args: [--skip-line, 'LICENCE:^Copyright \(c\) [0-9]{4} [A-Z][a-z]+ [A-Z][a-z]+$']
         pass_filenames: false
 
       - id: check-pii-msg

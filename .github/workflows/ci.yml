@@ -1,0 +1,54 @@
+name: CI
+
+# A push or pull request runs the tests on Ubuntu. macOS and Windows run
+# only when started by hand (`gh workflow run CI`), since the repository is
+# private and their minutes count 10 and 2 times. The hooks themselves don't
+# run here: check-pii's patterns come from the committer's machine.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# No token scopes unless a job grants them
+permissions: {}
+
+# A newer run cancels a pull request's older one. A push or manual run
+# waits for the one before it instead, so each push to main is tested.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # Against a hung shell, which would otherwise run for 6 hours. The suite
+    # takes under 3 minutes on Windows locally, where each run of the hook
+    # costs about 3 seconds under MSYS2.
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      # Let each OS finish, so one failing doesn't hide another's result
+      fail-fast: false
+      matrix:
+        os: ${{ github.event_name == 'workflow_dispatch' && fromJSON('["ubuntu-latest", "macos-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Nothing here pushes, so don't leave the token behind
+          persist-credentials: false
+
+      # The runner image has ShellCheck on Ubuntu only
+      - name: ShellCheck
+        if: runner.os == 'Linux'
+        run: shellcheck -x -s sh --severity=warning hooks/*.sh tests/*.sh
+
+      # On Windows, Git Bash's sh: Git for Windows' MSYS2 runtime, so the
+      # hook takes its Windows branches (uname MINGW64, cygpath)
+      - name: Run the tests
+        shell: bash
+        run: sh tests/check-pii.sh

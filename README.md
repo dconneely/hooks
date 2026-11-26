@@ -1,6 +1,6 @@
 # hooks
 
-Hooks for prek and pre-commit, shared between repositories.
+Hooks for prek and pre-commit, shared between repositories. MIT licence; see `LICENCE`.
 
 ## check-pii
 
@@ -29,8 +29,8 @@ Run the manual hooks after adding a pattern, since earlier content was never che
 before publishing a repository:
 
 ```sh
-prek run --hook-stage manual check-pii-files --all-files
-prek run --hook-stage manual check-pii-history
+prek run --stage manual check-pii-files --all-files
+prek run --stage manual check-pii-history
 ```
 
 Each finding gives a location, the check, and the line as written:
@@ -85,6 +85,8 @@ The hooks are POSIX sh scripts, so Windows needs `sh` on `PATH`, as MSYS2 provid
 
 ## Tests
 
-Run `sh tests/check-pii.sh`. Each test runs the hook in a scratch repository with a made-up identity
-and stubbed commands, never the machine's own. The suite takes under three minutes on Windows, where
-each run of the hook costs about three seconds under MSYS2, and much less elsewhere.
+Run `sh tests/check-pii.sh`. CI runs them on Ubuntu on every push, and on macOS and Windows too when
+started by hand with `gh workflow run CI`. Each test runs the hook in a scratch repository with a
+made-up identity and stubbed commands, never the machine's own. The suite takes under three minutes
+on Windows, where each run of the hook costs about three seconds under MSYS2, and much less
+elsewhere.
