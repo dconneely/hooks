@@ -1,9 +1,8 @@
 name: CI
 
-# A push or pull request runs the tests on Ubuntu. macOS and Windows run
-# only when started by hand (`gh workflow run CI`), since the repository is
-# private and their minutes count 10 and 2 times. The hooks themselves don't
-# run here: check-pii's patterns come from the committer's machine.
+# Every run tests on Ubuntu, macOS and Windows: a public repository's
+# standard runners cost nothing. The hooks themselves don't run here:
+# check-pii's patterns come from the committer's machine.
 on:
   push:
     branches: [main]
@@ -34,7 +33,7 @@ jobs:
       # Let each OS finish, so one failing doesn't hide another's result
       fail-fast: false
       matrix:
-        os: ${{ github.event_name == 'workflow_dispatch' && fromJSON('["ubuntu-latest", "macos-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

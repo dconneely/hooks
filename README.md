@@ -26,7 +26,9 @@ nothing personal is committed here or in the repositories that use it:
 | `check-pii-history` | `manual`     | every added line, new path and commit message on any branch |
 
 Run the manual hooks after adding a pattern, since earlier content was never checked against it, and
-before publishing a repository:
+before publishing a repository. Under MSYS2 on Windows, the history hook took 15 to 55 seconds on
+repositories of 12 to 480 commits (November 2026); the time follows the size of the history's diffs
+more than the number of commits.
 
 ```sh
 prek run --stage manual check-pii-files --all-files
@@ -73,8 +75,9 @@ Add these as the hook's `args`:
 
 ### In CI
 
-This repository is private, so a CI runner can't clone it. prek clones a hook repository only when
-some hook from it is not skipped, so a consumer's CI sets:
+On a CI runner the identity and hostname are the runner's and the patterns file is missing, so few
+checks mean anything there. prek clones a hook repository only when some hook from it is not
+skipped, so a consumer's CI can leave this repository out altogether:
 
 ```yaml
 env:
@@ -85,8 +88,7 @@ The hooks are POSIX sh scripts, so Windows needs `sh` on `PATH`, as MSYS2 provid
 
 ## Tests
 
-Run `sh tests/check-pii.sh`. CI runs them on Ubuntu on every push, and on macOS and Windows too when
-started by hand with `gh workflow run CI`. Each test runs the hook in a scratch repository with a
-made-up identity and stubbed commands, never the machine's own. The suite takes under three minutes
-on Windows, where each run of the hook costs about three seconds under MSYS2, and much less
-elsewhere.
+Run `sh tests/check-pii.sh`. CI runs them on Ubuntu, macOS and Windows. Each test runs the hook in a
+scratch repository with a made-up identity and stubbed commands, never the machine's own. The suite
+takes under three minutes on Windows, where each run of the hook costs about three seconds under
+MSYS2, and much less elsewhere.
