@@ -17,3 +17,22 @@
   language: script
   entry: hooks/check-pii.sh --commit-msg
   stages: [commit-msg]
+
+- id: check-pii-files
+  name: check-pii (whole files)
+  description: the same checks, on the whole content and the paths of the
+    files prek passes. Run by hand after adding a pattern.
+  language: script
+  entry: hooks/check-pii.sh --files
+  types: [text]
+  stages: [manual]
+
+- id: check-pii-history
+  name: check-pii (history)
+  description: the same checks, on every added line, new path and commit
+    message in the history of every branch. Run by hand before publishing.
+  language: script
+  entry: hooks/check-pii.sh --history
+  pass_filenames: false
+  always_run: true
+  stages: [manual]
