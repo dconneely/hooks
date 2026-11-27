@@ -57,6 +57,8 @@
 
 # ShellCheck checks a script in the dialect its shebang names, so a `.sh`
 # file declaring Bash would pass Bash-only syntax that `sh` then fails on.
+# .pre-commit-config.yaml runs a copy on this repository;
+# tests/sh-scripts-are-posix.sh checks the two match.
 - id: sh-scripts-are-posix
   name: .sh scripts must not declare a Bash shebang (use .bash for Bash scripts)
   language: pygrep

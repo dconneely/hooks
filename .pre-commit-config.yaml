@@ -51,7 +51,7 @@ repos:
         language: system
         entry: sh tests/sh-scripts-are-posix.sh
         pass_filenames: false
-        files: ^(\.pre-commit-hooks\.yaml|tests/(sh-scripts-are-posix|common)\.sh)$
+        files: ^(\.pre-commit-hooks\.yaml|\.pre-commit-config\.yaml|tests/(sh-scripts-are-posix|common)\.sh)$
 
       - id: actionlint
         name: actionlint (GitHub Actions workflows)
@@ -72,6 +72,14 @@ repos:
         entry: prettier --write --ignore-unknown
         additional_dependencies: [prettier@3.9.6]
         types: [markdown]
+
+      # The manifest's sh-scripts-are-posix, as a local hook for the same
+      # reason; tests/sh-scripts-are-posix.sh checks the two match
+      - id: sh-scripts-are-posix
+        name: .sh scripts must not declare a Bash shebang (use .bash for Bash scripts)
+        language: pygrep
+        entry: '^#!.*\bbash\b'
+        files: \.sh$
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: b82a6c8896e491b9cb377a99ff3412131920681b # frozen: v0.23.2
@@ -100,6 +108,25 @@ repos:
         language: system
         entry: sh hooks/check-pii.sh --commit-msg
         stages: [commit-msg]
+
+      # Run by hand, as the README says: after adding a pattern, and before
+      # a release
+      - id: check-pii-files
+        name: check-pii (whole files)
+        language: system
+        entry: sh hooks/check-pii.sh --files
+        args: [--skip-line, 'LICENCE:^Copyright \(c\) [0-9]{4} [A-Z][a-z]+ [A-Z][a-z]+$']
+        types: [text]
+        stages: [manual]
+
+      - id: check-pii-history
+        name: check-pii (history)
+        language: system
+        entry: sh hooks/check-pii.sh --history
+        args: [--skip-line, 'LICENCE:^Copyright \(c\) [0-9]{4} [A-Z][a-z]+ [A-Z][a-z]+$']
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
 
       - id: conventional-commit
         name: Conventional Commits (commit message)
