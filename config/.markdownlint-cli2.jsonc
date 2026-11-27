@@ -2,7 +2,9 @@
   // lint-markdown's rules: markdownlint's defaults, with two changes. A
   // consumer's own .markdownlint-cli2.jsonc merges with this file; a
   // .markdownlint.jsonc replaces it (verified with 0.23.2), so the README
-  // says to use the first for an exception.
+  // says to use the first for an exception. The owner's formatting-markdown
+  // skill has the same rules and Prettier settings in its fallback configs;
+  // keep them the same.
   //
   // MD013: a 100-column line length, which must match printWidth in
   // prettierrc.json beside this file; tests/markdown.sh checks it. Code
