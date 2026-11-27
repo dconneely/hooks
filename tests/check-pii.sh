@@ -72,10 +72,10 @@ check "check-pii msg: FQDN fails even when short label is generic" [ "$r" = fail
 if pii "moved ${slash}home${slash}someone${slash}x"; then r=passed; else r=failed; fi
 check "check-pii msg: a home-directory path fails" [ "$r" = failed ]
 
-# Optional machine-local checklist under XDG_CONFIG_HOME/dotfiles/pii-patterns
-mkdir -p "$tmp/local-xdg/dotfiles"
+# Optional machine-local patterns file under XDG_CONFIG_HOME/check-pii/patterns
+mkdir -p "$tmp/local-xdg/check-pii"
 cr=$(printf '\r')
-cat > "$tmp/local-xdg/dotfiles/pii-patterns" <<EOF
+cat > "$tmp/local-xdg/check-pii/patterns" <<EOF
 # Comments and blank lines are ignored
    # Indented comment too
 
@@ -93,8 +93,8 @@ if pii_local "deploy for acme-widget"; then r=passed; else r=failed; fi
 check "check-pii local list: fixed entry fails (any case, CRLF)" [ "$r" = failed ]
 if pii_local "refs PROJ-4821"; then r=passed; else r=failed; fi
 check "check-pii local list: regex entry fails" [ "$r" = failed ]
-mkdir -p "$tmp/bad-xdg/dotfiles"
-printf '%s\n' 'regex: [unclosed' > "$tmp/bad-xdg/dotfiles/pii-patterns"
+mkdir -p "$tmp/bad-xdg/check-pii"
+printf '%s\n' 'regex: [unclosed' > "$tmp/bad-xdg/check-pii/patterns"
 printf '%s\n' "fix: clean text" > "$tmp/msg.txt"
 if (cd "$prepo" && XDG_CONFIG_HOME="$tmp/bad-xdg" PATH="$tmp/hoststub:$PATH" USERPROFILE=/x/tester sh "$repo_dir/hooks/check-pii.sh" --commit-msg "$tmp/msg.txt" 2>/dev/null); then r=passed; else r=failed; fi
 check "check-pii local list: invalid regex fails closed" [ "$r" = failed ]
@@ -105,8 +105,8 @@ check "check-pii msg: comments and scissors section ignored" pii "fix: tidy
 # ------------------------ >8 ------------------------
 ${slash}home${slash}someone"
 
-# The machine-local file's own path, check-pii/patterns, works as the old one
-# does, and `!` entries allow a string by removing it before the checks
+# `!` entries in the patterns file allow a string by removing it before the
+# checks; the file's other entries still apply
 mkdir -p "$tmp/new-xdg/check-pii"
 cat > "$tmp/new-xdg/check-pii/patterns" <<EOF
 Acme-Widget
@@ -120,7 +120,7 @@ pii_new() {
         USERPROFILE=/x/tester sh "$repo_dir/hooks/check-pii.sh" --commit-msg "$tmp/msg.txt" 2>/dev/null)
 }
 if pii_new "deploy for acme-widget"; then r=passed; else r=failed; fi
-check "check-pii patterns: an entry in check-pii/patterns fails" [ "$r" = failed ]
+check "check-pii patterns: an entry beside allow entries fails" [ "$r" = failed ]
 check "check-pii patterns: an allowed string passes (any case)" \
     pii_new "see github.com/janeexampleson/linter and EXAMPLE-CORP"
 if pii_new "github.com/JaneExampleson/linter, by Jane"; then r=passed; else r=failed; fi
@@ -254,11 +254,11 @@ stage_only notes.yaml "  - repo: https://github.com/JaneExampleson/linter"
 if piidiff; then r=passed; else r=failed; fi
 check "check-pii diff: a repo: line elsewhere is checked" [ "$r" = failed ]
 
-# local pii-patterns applies in staged-diff mode too
+# The patterns file applies in staged-diff mode too
 stage_only notes.txt "deploy for acme-widget"
 if (cd "$prepo" && XDG_CONFIG_HOME="$tmp/local-xdg" PATH="$tmp/hoststub:$PATH" \
     USERPROFILE=/x/tester sh "$repo_dir/hooks/check-pii.sh" 2>/dev/null); then r=passed; else r=failed; fi
-check "check-pii diff: local pii-patterns entry fails" [ "$r" = failed ]
+check "check-pii diff: a patterns file entry fails" [ "$r" = failed ]
 
 # The checkout's parent directory, from `git rev-parse --show-toplevel`. The
 # real one first: a scratch directory is at least two levels deep everywhere

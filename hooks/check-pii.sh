@@ -215,8 +215,7 @@ fail=0
 # case-insensitive fixed string, `regex:` an extended regular expression
 # (also case-insensitive), and `!` allows a fixed string by removing it
 # before any check runs. `#` lines and blank lines are ignored. The file is
-# named after the tool, as XDG expects; the dotfiles' older path is read too
-# until every machine has moved.
+# named after the tool, as XDG expects.
 fixed_file="$work/fixed"
 regex_file="$work/regex"
 : > "$fixed_file"
@@ -236,33 +235,31 @@ trim_leading() {
         esac
     done
 }
-if [ -n "$config_home" ]; then
-    for pii_file in "$config_home/check-pii/patterns" "$config_home/dotfiles/pii-patterns"; do
-        [ -f "$pii_file" ] && [ -r "$pii_file" ] || continue
-        while IFS= read -r line || [ -n "$line" ]; do
-            line=${line%"$cr"}
-            trim_leading "$line"
-            line=$trimmed
-            while :; do
-                case "$line" in
-                    *" " | *"$tab") line=${line%?} ;;
-                    *) break ;;
-                esac
-            done
+pii_file=$config_home/check-pii/patterns
+if [ -n "$config_home" ] && [ -f "$pii_file" ] && [ -r "$pii_file" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+        line=${line%"$cr"}
+        trim_leading "$line"
+        line=$trimmed
+        while :; do
             case "$line" in
-                "" | \#*) continue ;;
-                regex:*)
-                    trim_leading "${line#regex:}"
-                    [ -z "$trimmed" ] || printf '%s\n' "$trimmed" >> "$regex_file"
-                    ;;
-                !*)
-                    trim_leading "${line#!}"
-                    [ -z "$trimmed" ] || printf '%s\n' "$trimmed" >> "$CHECK_PII_ALLOW"
-                    ;;
-                *) printf '%s\n' "$line" >> "$fixed_file" ;;
+                *" " | *"$tab") line=${line%?} ;;
+                *) break ;;
             esac
-        done < "$pii_file"
-    done
+        done
+        case "$line" in
+            "" | \#*) continue ;;
+            regex:*)
+                trim_leading "${line#regex:}"
+                [ -z "$trimmed" ] || printf '%s\n' "$trimmed" >> "$regex_file"
+                ;;
+            !*)
+                trim_leading "${line#!}"
+                [ -z "$trimmed" ] || printf '%s\n' "$trimmed" >> "$CHECK_PII_ALLOW"
+                ;;
+            *) printf '%s\n' "$line" >> "$fixed_file" ;;
+        esac
+    done < "$pii_file"
 fi
 
 # Allow entries: remove each occurrence, ignoring case, so the rest of the

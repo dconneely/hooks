@@ -44,9 +44,8 @@ notes.txt:2: mentions 'Jane' (from git user.name)
 
 ### The patterns file
 
-`${XDG_CONFIG_HOME:-$HOME/.config}/check-pii/patterns`, on each machine, never committed. The older
-`dotfiles/pii-patterns` in the same directory is read too. One entry per line; `#` lines and blank
-lines are ignored:
+`${XDG_CONFIG_HOME:-$HOME/.config}/check-pii/patterns`, on each machine, never committed. One entry
+per line; `#` lines and blank lines are ignored:
 
 - a plain line rejects a case-insensitive fixed string;
 - `regex:` and an extended regular expression rejects what it matches, ignoring case;
