@@ -76,19 +76,39 @@ Add these as the hook's `args`:
 ### In CI
 
 On a CI runner the identity and hostname are the runner's and the patterns file is missing, so few
-checks mean anything there. prek clones a hook repository only when some hook from it is not
-skipped, so a consumer's CI can leave this repository out altogether:
+checks mean anything there. A consumer's CI skips them:
 
 ```yaml
 env:
   SKIP: check-pii,check-pii-msg
 ```
 
-The hooks are POSIX sh scripts, so Windows needs `sh` on `PATH`, as MSYS2 provides.
+check-pii is a POSIX sh script, so Windows needs `sh` on `PATH`, as MSYS2 provides.
+
+## prettier
+
+Formats Markdown with Prettier, at the version `package.json` pins, using the consumer's own
+Prettier config. prek installs it once per machine and release, so no commit downloads it and
+concurrent runs don't race to install it, as they do with `npx`. The first run takes about 40
+seconds on Windows, later runs under two. For other file types, override `types` or `types_or`:
+
+```yaml
+- id: prettier
+  types_or: [markdown, yaml]
+```
+
+## sh-scripts-are-posix
+
+Fails a `.sh` file whose shebang names Bash. ShellCheck checks a script in the dialect its shebang
+names, so it would pass Bash-only syntax that `sh` then fails on. Name a Bash script `.bash`.
 
 ## Tests
 
-Run `sh tests/check-pii.sh`. CI runs them on Ubuntu, macOS and Windows. Each test runs the hook in a
-scratch repository with a made-up identity and stubbed commands, never the machine's own. The suite
-takes under three minutes on Windows, where each run of the hook costs about three seconds under
-MSYS2, and much less elsewhere.
+- `sh tests/check-pii.sh` runs check-pii in a scratch repository with a made-up identity and stubbed
+  commands, never the machine's own. CI runs it on Ubuntu, macOS and Windows. It takes under three
+  minutes on Windows, where each run of the hook costs about three seconds under MSYS2, and much
+  less elsewhere.
+- `sh tests/prettier.sh` and `sh tests/sh-scripts-are-posix.sh` run those hooks from the manifest
+  through `prek try-repo`, as a consumer does, from a scratch clone of the working tree; the first
+  also checks that the two Prettier pins match. CI runs them on Ubuntu. Each takes about a minute
+  the first time, while prek installs Prettier.

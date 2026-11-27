@@ -31,12 +31,27 @@ repos:
         entry: shellcheck -x -s sh --severity=warning
         files: ^(hooks|tests)/[^/]+\.sh$
 
-      - id: tests
+      # Each hook's tests run when the hook or its tests change
+      - id: check-pii-tests
         name: check-pii tests
         language: system
         entry: sh tests/check-pii.sh
         pass_filenames: false
-        files: ^(hooks/check-pii\.sh|tests/[^/]+\.sh)$
+        files: ^(hooks/check-pii\.sh|tests/(check-pii|common)\.sh)$
+
+      - id: prettier-tests
+        name: prettier tests
+        language: system
+        entry: sh tests/prettier.sh
+        pass_filenames: false
+        files: ^(\.pre-commit-hooks\.yaml|\.pre-commit-config\.yaml|package\.json|tests/(prettier|common)\.sh)$
+
+      - id: sh-scripts-are-posix-tests
+        name: sh-scripts-are-posix tests
+        language: system
+        entry: sh tests/sh-scripts-are-posix.sh
+        pass_filenames: false
+        files: ^(\.pre-commit-hooks\.yaml|tests/(sh-scripts-are-posix|common)\.sh)$
 
       - id: actionlint
         name: actionlint (GitHub Actions workflows)
@@ -46,15 +61,17 @@ repos:
         entry: actionlint
         files: ^\.github/workflows/[^/]+\.ya?ml$
 
-      - id: prettier-markdown
+      # The manifest's prettier hook, as a local hook: prek can't take this
+      # repository's own manifest. Keep the version in step with
+      # package.json; tests/prettier.sh checks it.
+      - id: prettier
         name: Prettier (formats Markdown)
         description: rewraps prose to .prettierrc.json's width, which must
           match .markdownlint-cli2.jsonc's line length.
-        language: system
-        entry: npx --yes prettier@3.9.6 --write
+        language: node
+        entry: prettier --write --ignore-unknown
+        additional_dependencies: [prettier@3.9.6]
         types: [markdown]
-        # Concurrent npx calls on a cold cache race to install the package
-        require_serial: true
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: b82a6c8896e491b9cb377a99ff3412131920681b # frozen: v0.23.2

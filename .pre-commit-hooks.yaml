@@ -1,6 +1,6 @@
-# The hooks this repository provides, read by prek and pre-commit. Each runs
-# a POSIX sh script from this repository's checkout (`language: script`),
-# with the consumer's root as the working directory.
+# The hooks this repository provides, read by prek and pre-commit, which run
+# them with the consumer's root as the working directory. check-pii runs a
+# POSIX sh script from this repository's checkout (`language: script`).
 
 - id: check-pii
   name: check-pii (personal details)
@@ -36,3 +36,24 @@
   pass_filenames: false
   always_run: true
   stages: [manual]
+
+# Installs this repository as a Node.js package, so Prettier comes from
+# package.json at the version this release pins, once per machine, with no
+# per-commit download and no race between concurrent installs, unlike
+# `npx` (verified with prek 0.5.10 on Windows: 40 s for the first run, then
+# 1.6 s). pre-commit/mirrors-prettier stops at Prettier 3.1.0.
+- id: prettier
+  name: Prettier (formats Markdown)
+  description: formats Markdown with the repository's own Prettier config.
+    Override `types` or `types_or` for other file types.
+  language: node
+  entry: prettier --write --ignore-unknown
+  types: [markdown]
+
+# ShellCheck checks a script in the dialect its shebang names, so a `.sh`
+# file declaring Bash would pass Bash-only syntax that `sh` then fails on.
+- id: sh-scripts-are-posix
+  name: .sh scripts must not declare a Bash shebang (use .bash for Bash scripts)
+  language: pygrep
+  entry: '^#!.*\bbash\b'
+  files: \.sh$
