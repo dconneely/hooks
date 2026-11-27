@@ -37,17 +37,22 @@
   always_run: true
   stages: [manual]
 
-# Installs this repository as a Node.js package, so Prettier comes from
-# package.json at the version this release pins, once per machine, with no
-# per-commit download and no race between concurrent installs, unlike
+# Installs Prettier at the version this release pins, once per machine, with
+# no per-commit download and no race between concurrent installs, unlike
 # `npx` (verified with prek 0.5.10 on Windows: 40 s for the first run, then
-# 1.6 s). pre-commit/mirrors-prettier stops at Prettier 3.1.0.
+# 1.6 s). pre-commit/mirrors-prettier stops at Prettier 3.1.0. The pin is an
+# additional dependency, not one in package.json: npm links only the
+# installed package's own bins, so on Linux `prettier` from package.json
+# was not on the hook's PATH (verified with prek 0.5.10). Keep the version
+# in step with .pre-commit-config.yaml's prettier hook; tests/prettier.sh
+# checks it.
 - id: prettier
   name: Prettier (formats Markdown)
   description: formats Markdown with the repository's own Prettier config.
     Override `types` or `types_or` for other file types.
   language: node
   entry: prettier --write --ignore-unknown
+  additional_dependencies: [prettier@3.9.6]
   types: [markdown]
 
 # ShellCheck checks a script in the dialect its shebang names, so a `.sh`

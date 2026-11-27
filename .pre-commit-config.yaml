@@ -63,7 +63,7 @@ repos:
 
       # The manifest's prettier hook, as a local hook: prek can't take this
       # repository's own manifest. Keep the version in step with
-      # package.json; tests/prettier.sh checks it.
+      # .pre-commit-hooks.yaml's; tests/prettier.sh checks it.
       - id: prettier
         name: Prettier (formats Markdown)
         description: rewraps prose to .prettierrc.json's width, which must

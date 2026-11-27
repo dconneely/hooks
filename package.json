@@ -2,9 +2,6 @@
   "name": "hooks",
   "version": "0.0.0",
   "private": true,
-  "description": "Installed by prek and pre-commit for the prettier hook. The Prettier version is also in .pre-commit-config.yaml; tests/prettier.sh checks they match.",
-  "license": "MIT",
-  "dependencies": {
-    "prettier": "3.9.6"
-  }
+  "description": "prek and pre-commit install this repository as a Node.js package for the prettier hook. Prettier itself is the hook's additional dependency in .pre-commit-hooks.yaml.",
+  "license": "MIT"
 }

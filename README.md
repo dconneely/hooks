@@ -87,10 +87,10 @@ check-pii is a POSIX sh script, so Windows needs `sh` on `PATH`, as MSYS2 provid
 
 ## prettier
 
-Formats Markdown with Prettier, at the version `package.json` pins, using the consumer's own
-Prettier config. prek installs it once per machine and release, so no commit downloads it and
-concurrent runs don't race to install it, as they do with `npx`. The first run takes about 40
-seconds on Windows, later runs under two. For other file types, override `types` or `types_or`:
+Formats Markdown with Prettier, at the version the hook pins, using the consumer's own Prettier
+config. prek installs it once per machine and release, so no commit downloads it and concurrent runs
+don't race to install it, as they do with `npx`. The first run takes about 40 seconds on Windows,
+later runs under two. For other file types, override `types` or `types_or`:
 
 ```yaml
 - id: prettier

@@ -45,15 +45,22 @@ manifest_init() {
 }
 
 # try_hook <hook> <file>...: runs one of the manifest's hooks on the
-# consumer's files, quietly. Needs manifest_init.
+# consumer's files. Its output goes to $tmp/prek.log, which unit_finish
+# prints if any check failed, since an expected failure and an error in
+# prek itself (a failed install) look the same from the exit status.
 try_hook() {
     hook=$1
     shift
+    printf '%s\n' "==== try_hook $hook $*" >> "$tmp/prek.log"
     (cd "$consumer" && git -c core.autocrlf=false add -A &&
-        prek try-repo "$hooks_copy" "$hook" --files "$@" >/dev/null 2>&1)
+        prek try-repo "$hooks_copy" "$hook" --files "$@" >> "$tmp/prek.log" 2>&1)
 }
 
 unit_finish() {
+    if [ "$fail" -ne 0 ] && [ -s "$tmp/prek.log" ]; then
+        echo "---- prek output"
+        cat "$tmp/prek.log"
+    fi
     echo "----"
     echo "$pass passed, $fail failed"
     [ "$fail" -eq 0 ]
