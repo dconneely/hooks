@@ -2,6 +2,14 @@
   "name": "hooks",
   "version": "0.0.0",
   "private": true,
-  "description": "prek and pre-commit install this repository as a Node.js package for the prettier hook. Prettier itself is the hook's additional dependency in .pre-commit-hooks.yaml.",
-  "license": "MIT"
+  "description": "prek and pre-commit install this repository as a Node.js package for the format-markdown and lint-markdown hooks. The tool versions are also in .pre-commit-config.yaml's local copies; tests/markdown.sh checks they match.",
+  "license": "MIT",
+  "bin": {
+    "format-markdown": "bin/format-markdown.js",
+    "lint-markdown": "bin/lint-markdown.js"
+  },
+  "dependencies": {
+    "markdownlint-cli2": "0.23.2",
+    "prettier": "3.9.6"
+  }
 }

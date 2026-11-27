@@ -6,6 +6,9 @@ unit_init() {
     repo_dir=$(cd "$(dirname "$1")/.." && pwd)
     tmp=$(mktemp -d)
     trap 'rm -rf "$tmp"' 0
+    # Run as a hook, the suites inherit Git's variables for this repository,
+    # which would point the scratch repositories' Git commands back at it
+    unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
     pass=0
     fail=0
 }
@@ -23,11 +26,13 @@ check() {
     fi
 }
 
-# manifest_init: for running the manifest's hooks as a consumer does, with
-# `prek try-repo`. try-repo takes a commit, so the working tree's manifest,
-# package.json and hooks are committed to a scratch clone ($hooks_copy). The
-# consumer is an empty scratch repository ($consumer). Returns 1 without
-# prek, after saying so.
+# manifest_init: for running the manifest's hooks as a consumer does. A
+# consumer pins a commit, so the working tree's manifest, package.json and
+# the files the hooks run are committed to a scratch clone ($hooks_copy).
+# The consumer ($consumer) is a scratch repository whose config pins that
+# commit, so prek installs each hook's environment once for the suite.
+# `prek try-repo` would install it afresh on every call: 7 calls took 3
+# minutes on Windows. Returns 1 without prek, after saying so.
 manifest_init() {
     if ! command -v prek >/dev/null 2>&1; then
         echo "skip - prek is not installed, so the manifest's hooks are not run"
@@ -36,12 +41,20 @@ manifest_init() {
     hooks_copy="$tmp/hooks"
     git clone -q "$repo_dir" "$hooks_copy"
     cp "$repo_dir/.pre-commit-hooks.yaml" "$repo_dir/package.json" "$hooks_copy/"
-    cp "$repo_dir"/hooks/*.sh "$hooks_copy/hooks/"
+    for dir in hooks bin lib config; do
+        rm -rf "${hooks_copy:?}/$dir"
+        cp -R "$repo_dir/$dir" "$hooks_copy/$dir"
+    done
     git -C "$hooks_copy" add -A
     git -C "$hooks_copy" -c user.name=Test -c user.email=test -c commit.gpgsign=false \
         commit -q --allow-empty -m "test: working tree"
     consumer="$tmp/consumer"
     git init -q "$consumer"
+    {
+        printf '%s\n' 'repos:' "  - repo: '$hooks_copy'" "    rev: $(git -C "$hooks_copy" rev-parse HEAD)"
+        printf '%s\n' '    hooks:'
+        sed -n 's/^- id: \(.*\)$/      - id: \1/p' "$hooks_copy/.pre-commit-hooks.yaml"
+    } > "$consumer/.pre-commit-config.yaml"
 }
 
 # try_hook <hook> <file>...: runs one of the manifest's hooks on the
@@ -53,7 +66,7 @@ try_hook() {
     shift
     printf '%s\n' "==== try_hook $hook $*" >> "$tmp/prek.log"
     (cd "$consumer" && git -c core.autocrlf=false add -A &&
-        prek try-repo "$hooks_copy" "$hook" --files "$@" >> "$tmp/prek.log" 2>&1)
+        prek run "$hook" --files "$@" >> "$tmp/prek.log" 2>&1)
 }
 
 unit_finish() {

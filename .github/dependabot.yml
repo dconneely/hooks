@@ -1,9 +1,8 @@
-# Keeps the workflow's actions up to date. Dependabot understands SHA pins
-# with a version comment (`@<sha> # v7.0.1`) and updates both, so its pull
-# requests keep every action pinned to a full commit SHA. It reads neither
-# the prettier hook's additional dependency nor the hook pins in
-# .pre-commit-config.yaml (`prek autoupdate --freeze` updates those), and
-# package.json has no dependencies, so GitHub Actions is the only ecosystem.
+# Keeps the workflow's actions and the Markdown hooks' tools up to date.
+# Dependabot understands SHA pins with a version comment
+# (`@<sha> # v7.0.1`) and updates both, so its pull requests keep every
+# action pinned to a full commit SHA. It doesn't read the hook pins in
+# .pre-commit-config.yaml (`prek autoupdate --freeze` updates those).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -23,3 +22,21 @@ updates:
           - "*"
     commit-message:
       prefix: ci
+
+  # Prettier and markdownlint-cli2 in package.json. The local copies in
+  # .pre-commit-config.yaml pin them again, which Dependabot doesn't update:
+  # tests/markdown.sh fails its pull request until they are changed too.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: thursday
+      time: "20:06"
+    cooldown:
+      default-days: 7
+    groups:
+      markdown-tools:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: build

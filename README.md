@@ -84,17 +84,40 @@ env:
 
 check-pii is a POSIX sh script, so Windows needs `sh` on `PATH`, as MSYS2 provides.
 
-## prettier
+## format-markdown and lint-markdown
 
-Formats Markdown with Prettier, at the version the hook pins, using the consumer's own Prettier
-config. prek installs it once per machine and release, so no commit downloads it and concurrent runs
-don't race to install it, as they do with `npx`. The first run takes about 40 seconds on Windows,
-later runs under two. For other file types, override `types` or `types_or`:
+`format-markdown` formats Markdown with Prettier, and `lint-markdown` lints it with
+markdownlint-cli2, each with the config in `config/`, so a repository needs no Markdown config of
+its own:
+
+- Prettier wraps prose at 100 columns, with 2-space indents, and leaves code blocks alone.
+- markdownlint applies its default rules, with lines up to 100 columns (code blocks, tables and
+  headings exempt) and the same heading allowed under different parents.
+
+List `format-markdown` first, so `lint-markdown` checks what it wrote:
 
 ```yaml
-- id: prettier
-  types_or: [markdown, yaml]
+- repo: https://github.com/dconneely/hooks
+  rev: <commit> # frozen: v0.2.0
+  hooks:
+    - id: format-markdown
+    - id: lint-markdown
 ```
+
+prek installs both tools, at the versions `package.json` pins, once per machine and release, so no
+commit downloads them and concurrent runs don't race to install them, as they do with `npx`. The
+first run takes about 40 seconds on Windows, later runs under two.
+
+Exceptions:
+
+- To skip a file, use the hook's `exclude:`. Prettier also honours a `.prettierignore`.
+- To change a markdownlint rule, put it alone in a `.markdownlint-cli2.jsonc`, which merges with
+  these rules, at the root or in a subdirectory: `{ "config": { "MD051": false } }`. A
+  `.markdownlint.jsonc` replaces them all instead, and lines fall back to 80 columns.
+- A repository's `.prettierrc.json` is ignored, and so are an `.editorconfig`'s indents.
+
+An editor doesn't see this config. For VS Code's markdownlint extension, copy the rules from
+`config/.markdownlint-cli2.jsonc` into its `markdownlint.config` setting.
 
 ## sh-scripts-are-posix
 
@@ -107,7 +130,8 @@ names, so it would pass Bash-only syntax that `sh` then fails on. Name a Bash sc
   commands, never the machine's own. CI runs it on Ubuntu, macOS and Windows. It takes under three
   minutes on Windows, where each run of the hook costs about three seconds under MSYS2, and much
   less elsewhere.
-- `sh tests/prettier.sh` and `sh tests/sh-scripts-are-posix.sh` run those hooks from the manifest
-  through `prek try-repo`, as a consumer does, from a scratch clone of the working tree; the first
-  also checks that the two Prettier pins match. CI runs them on Ubuntu. Each takes about a minute
-  the first time, while prek installs Prettier.
+- `sh tests/markdown.sh` and `sh tests/sh-scripts-are-posix.sh` run those hooks from the manifest
+  through `prek try-repo`, as a consumer does, from a scratch clone of the working tree. The first
+  also checks that the tool versions in `package.json` and in `.pre-commit-config.yaml`'s local
+  copies match, and that Prettier's width equals markdownlint's line length. CI runs them on Ubuntu.
+  The first takes about a minute the first time, while prek installs the tools.

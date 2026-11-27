@@ -39,12 +39,12 @@ repos:
         pass_filenames: false
         files: ^(hooks/check-pii\.sh|tests/(check-pii|common)\.sh)$
 
-      - id: prettier-tests
-        name: prettier tests
+      - id: markdown-tests
+        name: format-markdown and lint-markdown tests
         language: system
-        entry: sh tests/prettier.sh
+        entry: sh tests/markdown.sh
         pass_filenames: false
-        files: ^(\.pre-commit-hooks\.yaml|\.pre-commit-config\.yaml|package\.json|tests/(prettier|common)\.sh)$
+        files: ^(\.pre-commit-hooks\.yaml|\.pre-commit-config\.yaml|package\.json|(bin|lib|config)/.+|tests/(markdown|common)\.sh)$
 
       - id: sh-scripts-are-posix-tests
         name: sh-scripts-are-posix tests
@@ -61,16 +61,24 @@ repos:
         entry: actionlint
         files: ^\.github/workflows/[^/]+\.ya?ml$
 
-      # The manifest's prettier hook, as a local hook: prek can't take this
-      # repository's own manifest. Keep the version in step with
-      # .pre-commit-hooks.yaml's; tests/prettier.sh checks it.
-      - id: prettier
-        name: Prettier (formats Markdown)
-        description: rewraps prose to .prettierrc.json's width, which must
-          match .markdownlint-cli2.jsonc's line length.
+      # The manifest's Markdown hooks, as local hooks running this checkout's
+      # scripts: prek can't take this repository's own manifest. A local hook
+      # can't install this repository as its dependency (npm runs in a
+      # temporary directory; verified), so the tools are pinned again here.
+      # Keep the versions in step with package.json; tests/markdown.sh checks
+      # them.
+      - id: format-markdown
+        name: format-markdown (Prettier)
         language: node
-        entry: prettier --write --ignore-unknown
-        additional_dependencies: [prettier@3.9.6]
+        entry: node bin/format-markdown.js
+        additional_dependencies: [prettier@3.9.6, markdownlint-cli2@0.23.2]
+        types: [markdown]
+
+      - id: lint-markdown
+        name: lint-markdown (markdownlint-cli2)
+        language: node
+        entry: node bin/lint-markdown.js
+        additional_dependencies: [prettier@3.9.6, markdownlint-cli2@0.23.2]
         types: [markdown]
 
       # The manifest's sh-scripts-are-posix, as a local hook for the same
@@ -80,12 +88,6 @@ repos:
         language: pygrep
         entry: '^#!.*\bbash\b'
         files: \.sh$
-
-  - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: b82a6c8896e491b9cb377a99ff3412131920681b # frozen: v0.23.2
-    hooks:
-      - id: markdownlint-cli2
-        name: markdownlint (Markdown)
 
   - repo: local
     hooks:
@@ -99,8 +101,14 @@ repos:
         name: check-pii (personal details)
         language: system
         entry: sh hooks/check-pii.sh
-        # LICENCE's copyright line names its holder
-        args: [--skip-line, 'LICENCE:^Copyright \(c\) [0-9]{4} [A-Z][a-z]+ [A-Z][a-z]+$']
+        # LICENCE's copyright line names its holder, and the README's
+        # example `repo:` line holds this repository's URL, whose owner's
+        # handle shares a word with that name. The other modes reuse these.
+        args: &pii-skips
+          - --skip-line
+          - 'LICENCE:^Copyright \(c\) [0-9]{4} [A-Z][a-z]+ [A-Z][a-z]+$'
+          - --skip-line
+          - 'README\.md:^[[:blank:]]*- repo: https://github\.com/[^[:blank:]@/]+/hooks$'
         pass_filenames: false
 
       - id: check-pii-msg
@@ -115,7 +123,7 @@ repos:
         name: check-pii (whole files)
         language: system
         entry: sh hooks/check-pii.sh --files
-        args: [--skip-line, 'LICENCE:^Copyright \(c\) [0-9]{4} [A-Z][a-z]+ [A-Z][a-z]+$']
+        args: *pii-skips
         types: [text]
         stages: [manual]
 
@@ -123,7 +131,7 @@ repos:
         name: check-pii (history)
         language: system
         entry: sh hooks/check-pii.sh --history
-        args: [--skip-line, 'LICENCE:^Copyright \(c\) [0-9]{4} [A-Z][a-z]+ [A-Z][a-z]+$']
+        args: *pii-skips
         pass_filenames: false
         always_run: true
         stages: [manual]

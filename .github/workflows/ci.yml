@@ -53,11 +53,11 @@ jobs:
         run: sh tests/check-pii.sh
 
       # The manifest's hooks through prek, on Ubuntu only: they hold no
-      # OS-specific code, and the prettier hook's install was verified on
+      # OS-specific code, and the Markdown hooks' install was verified on
       # Windows by hand. Pinned to the prek version used locally.
       - name: Run the manifest tests
         if: runner.os == 'Linux'
         run: |
           pipx install prek==0.5.10
-          sh tests/prettier.sh
+          sh tests/markdown.sh
           sh tests/sh-scripts-are-posix.sh

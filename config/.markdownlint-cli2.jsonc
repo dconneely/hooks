@@ -1,0 +1,31 @@
+{
+  // lint-markdown's rules: markdownlint's defaults, with two changes. A
+  // consumer's own .markdownlint-cli2.jsonc merges with this file; a
+  // .markdownlint.jsonc replaces it (verified with 0.23.2), so the README
+  // says to use the first for an exception.
+  //
+  // MD013: a 100-column line length, which must match printWidth in
+  // prettierrc.json beside this file; tests/markdown.sh checks it. Code
+  // blocks, tables and headings are exempt, since none can be wrapped.
+  // `stern` also flags a prose line whose last word runs past the limit,
+  // which the default lets through; a line that is one long word, such as a
+  // bare URL, still passes.
+  //
+  // MD024: the same heading is allowed under different parent headings.
+  //
+  // No "globs": with one set, markdownlint-cli2 lints those files as well as
+  // the ones the hook passes, including untracked ones.
+  "config": {
+    "default": true,
+    "MD013": {
+      "line_length": 100,
+      "code_blocks": false,
+      "tables": false,
+      "headings": false,
+      "stern": true
+    },
+    "MD024": {
+      "siblings_only": true
+    }
+  }
+}

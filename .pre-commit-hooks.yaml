@@ -37,22 +37,26 @@
   always_run: true
   stages: [manual]
 
-# Installs Prettier at the version this release pins, once per machine, with
-# no per-commit download and no race between concurrent installs, unlike
-# `npx` (verified with prek 0.5.10 on Windows: 40 s for the first run, then
-# 1.6 s). pre-commit/mirrors-prettier stops at Prettier 3.1.0. The pin is an
-# additional dependency, not one in package.json: npm links only the
-# installed package's own bins, so on Linux `prettier` from package.json
-# was not on the hook's PATH (verified with prek 0.5.10). Keep the version
-# in step with .pre-commit-config.yaml's prettier hook; tests/prettier.sh
-# checks it.
-- id: prettier
-  name: Prettier (formats Markdown)
-  description: formats Markdown with the repository's own Prettier config.
-    Override `types` or `types_or` for other file types.
+# The Markdown hooks install this repository as a Node.js package, once per
+# machine and release, with Prettier and markdownlint-cli2 at the versions
+# package.json pins: no per-commit download, and no race between concurrent
+# installs, unlike `npx`. Each runs its tool with the config in config/
+# (lib/run-tool.js). .pre-commit-config.yaml runs copies on this repository.
+# Run format-markdown first, so lint-markdown checks what it wrote.
+- id: format-markdown
+  name: format-markdown (Prettier)
+  description: formats Markdown with Prettier, wrapping prose at 100
+    columns, using this repository's config, not the consumer's.
   language: node
-  entry: prettier --write --ignore-unknown
-  additional_dependencies: [prettier@3.9.6]
+  entry: format-markdown
+  types: [markdown]
+
+- id: lint-markdown
+  name: lint-markdown (markdownlint-cli2)
+  description: lints Markdown with markdownlint-cli2, using this
+    repository's rules, merged with a consumer's .markdownlint-cli2.jsonc.
+  language: node
+  entry: lint-markdown
   types: [markdown]
 
 # ShellCheck checks a script in the dialect its shebang names, so a `.sh`
