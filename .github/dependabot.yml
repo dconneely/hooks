@@ -1,0 +1,25 @@
+# Keeps the workflow's actions up to date. Dependabot understands SHA pins
+# with a version comment (`@<sha> # v7.0.1`) and updates both, so its pull
+# requests keep every action pinned to a full commit SHA. It reads neither
+# the prettier hook's additional dependency nor the hook pins in
+# .pre-commit-config.yaml (`prek autoupdate --freeze` updates those), and
+# package.json has no dependencies, so GitHub Actions is the only ecosystem.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: thursday
+      time: "20:06"
+    # Leave new releases a week to settle (or be pulled) before proposing
+    # them
+    cooldown:
+      default-days: 7
+    # One pull request for all the actions, not one each
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: ci
