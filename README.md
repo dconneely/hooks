@@ -135,3 +135,5 @@ names, so it would pass Bash-only syntax that `sh` then fails on. Name a Bash sc
   also checks that the tool versions in `package.json` and in `.pre-commit-config.yaml`'s local
   copies match, and that Prettier's width equals markdownlint's line length. CI runs them on Ubuntu.
   The first takes about a minute the first time, while prek installs the tools.
+
+Changes between releases are in `CHANGELOG.md`.
