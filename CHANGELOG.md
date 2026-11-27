@@ -3,6 +3,13 @@
 Changes to the hooks, by release. Versions follow [Semantic Versioning](https://semver.org/); before
 1.0.0, a minor release can remove or change a hook.
 
+## 0.2.1 - 2026-11-27
+
+### Changed
+
+- `format-markdown` uses Prettier 3.10.1, and `lint-markdown` markdownlint-cli2 0.24.2 (markdownlint
+  0.42.2). Neither changes the output on the owner's repositories.
+
 ## 0.2.0 - 2026-11-27
 
 ### Added

@@ -71,14 +71,14 @@ repos:
         name: format-markdown (Prettier)
         language: node
         entry: node bin/format-markdown.js
-        additional_dependencies: [prettier@3.9.6, markdownlint-cli2@0.23.2]
+        additional_dependencies: [prettier@3.10.1, markdownlint-cli2@0.24.2]
         types: [markdown]
 
       - id: lint-markdown
         name: lint-markdown (markdownlint-cli2)
         language: node
         entry: node bin/lint-markdown.js
-        additional_dependencies: [prettier@3.9.6, markdownlint-cli2@0.23.2]
+        additional_dependencies: [prettier@3.10.1, markdownlint-cli2@0.24.2]
         types: [markdown]
 
       # The manifest's sh-scripts-are-posix, as a local hook for the same
